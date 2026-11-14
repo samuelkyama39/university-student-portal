@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Student Registration</h2>
+        <p>Create your university portal account</p>
+
+        <form action="/register" method="POST">
+
+            <input type="text" name="full_name"
+                   placeholder="Full Name" required>
+
+            <input type="text" name="reg_number"
+                   placeholder="Registration Number" required>
+
+            <input type="email" name="email"
+                   placeholder="Email Address" required>
+
+            <input type="text" name="phone"
+                   placeholder="Phone Number">
+
+            <input type="text" name="course"
+                   placeholder="Course" required>
+
+            <input type="number" name="year_of_study"
+                   placeholder="Year of Study" min="1" max="7" required>
+
+            <input type="password" name="password"
+                   placeholder="Create Password" minlength="8" required>
+
+            <button type="submit">Create Account</button>
+
+        </form>
+
+        <p>Already have an account?
+            <a href="index.html">Login here</a>
+        </p>
+    </div>
+
+</body>
+</html>

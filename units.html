@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Units</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            color: #222;
+        }
+
+        header {
+            background: #142b52;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000012;
+        }
+
+        h2 { color: #142b52; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        th {
+            background: #142b52;
+            color: white;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #142b52;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .message {
+            padding: 15px;
+            background: #f3f5f9;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>University Student Portal</h2>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>My Registered Units</h2>
+        <p>View the units registered for your course.</p>
+
+        <div id="message" class="message">
+            Loading your units...
+        </div>
+
+        <table id="unitsTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Unit Code</th>
+                    <th>Unit Name</th>
+                    <th>Semester</th>
+                </tr>
+            </thead>
+            <tbody id="unitsBody"></tbody>
+        </table>
+
+        <a href="dashboard.html">← Back to Dashboard</a>
+    </div>
+</div>
+
+<script>
+fetch("/api/units")
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = "index.html";
+            throw new Error("Please log in.");
+        }
+
+        if (!response.ok) {
+            throw new Error("Could not load units.");
+        }
+
+        return response.json();
+    })
+    .then(units => {
+        const message = document.getElementById("message");
+        const table = document.getElementById("unitsTable");
+        const body = document.getElementById("unitsBody");
+
+        if (units.length === 0) {
+            message.textContent = "You have not registered any units yet.";
+            return;
+        }
+
+        units.forEach(unit => {
+            const row = document.createElement("tr");
+
+            [unit.unit_code, unit.unit_name, unit.semester].forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            body.appendChild(row);
+        });
+
+        message.style.display = "none";
+        table.style.display = "table";
+    })
+    .catch(error => {
+        document.getElementById("message").textContent = error.message;
+    });
+</script>
+
+</body>
+</html>

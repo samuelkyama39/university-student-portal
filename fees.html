@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Fees</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            color: #222;
+        }
+
+        header {
+            background: #142b52;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000012;
+            margin-bottom: 20px;
+        }
+
+        h2 { color: #142b52; }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .summary .card {
+            margin: 0;
+        }
+
+        .amount {
+            font-size: 23px;
+            font-weight: bold;
+            color: #142b52;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        th {
+            background: #142b52;
+            color: white;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #142b52;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #message {
+            padding: 15px;
+            background: #f3f5f9;
+            border-radius: 8px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>University Student Portal</h2>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>My Fees Statement</h2>
+        <p>View your fees information and payment history.</p>
+    </div>
+
+    <div id="message">Loading your fees information...</div>
+
+    <div class="summary">
+        <div class="card">
+            <h3>Total Fees</h3>
+            <div class="amount" id="totalFees">KSh 0.00</div>
+        </div>
+
+        <div class="card">
+            <h3>Amount Paid</h3>
+            <div class="amount" id="amountPaid">KSh 0.00</div>
+        </div>
+
+        <div class="card">
+            <h3>Balance</h3>
+            <div class="amount" id="balance">KSh 0.00</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h2>Payment History</h2>
+
+        <div class="table-wrap">
+            <table id="paymentTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentBody"></tbody>
+            </table>
+        </div>
+
+        <p id="noPayments">No payment records available.</p>
+
+        <a href="dashboard.html">← Back to Dashboard</a>
+    </div>
+
+</div>
+
+<script>
+fetch("/api/fees")
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = "index.html";
+            throw new Error("Please log in.");
+        }
+
+        if (!response.ok) {
+            throw new Error("Could not load fees information.");
+        }
+
+        return response.json();
+    })
+    .then(data => {
+        const money = value =>
+            "KSh " + Number(value).toLocaleString("en-KE", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+        document.getElementById("totalFees").textContent = money(data.totalFees);
+        document.getElementById("amountPaid").textContent = money(data.amountPaid);
+        document.getElementById("balance").textContent = money(data.balance);
+
+        const body = document.getElementById("paymentBody");
+
+        if (data.payments.length > 0) {
+            data.payments.forEach(payment => {
+                const row = document.createElement("tr");
+
+                [
+                    new Date(payment.payment_date).toLocaleDateString(),
+                    payment.reference,
+                    money(payment.amount)
+                ].forEach(value => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+
+                body.appendChild(row);
+            });
+
+            document.getElementById("paymentTable").style.display = "table";
+            document.getElementById("noPayments").style.display = "none";
+        }
+
+        document.getElementById("message").style.display = "none";
+    })
+    .catch(error => {
+        document.getElementById("message").textContent = error.message;
+    });
+</script>
+
+</body>
+</html>
+

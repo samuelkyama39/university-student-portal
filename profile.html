@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            color: #222;
+        }
+
+        header {
+            background: #142b52;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .profile-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000012;
+        }
+
+        .profile-card h2 {
+            color: #142b52;
+            margin-bottom: 25px;
+        }
+
+        .detail {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail strong {
+            display: block;
+            color: #666;
+            margin-bottom: 7px;
+        }
+
+        .detail span {
+            font-size: 16px;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #142b52;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>University Student Portal</h2>
+</header>
+
+<div class="container">
+    <div class="profile-card">
+        <h2>My Student Profile</h2>
+
+        <div class="detail">
+            <strong>Full Name</strong>
+            <span id="fullName">Loading...</span>
+        </div>
+
+        <div class="detail">
+            <strong>Registration Number</strong>
+            <span id="regNumber">Loading...</span>
+        </div>
+
+        <div class="detail">
+            <strong>Email Address</strong>
+            <span id="email">Loading...</span>
+        </div>
+
+        <div class="detail">
+            <strong>Phone Number</strong>
+            <span id="phone">Loading...</span>
+        </div>
+
+        <div class="detail">
+            <strong>Course</strong>
+            <span id="course">Loading...</span>
+        </div>
+
+        <div class="detail">
+            <strong>Year of Study</strong>
+            <span id="year">Loading...</span>
+        </div>
+
+        <a href="dashboard.html">← Back to Dashboard</a>
+    </div>
+</div>
+
+<script>
+fetch("/api/me")
+    .then(response => {
+        if (!response.ok) {
+            window.location.href = "index.html";
+            throw new Error("Please log in.");
+        }
+        return response.json();
+    })
+    .then(student => {
+        document.getElementById("fullName").textContent = student.full_name;
+        document.getElementById("regNumber").textContent = student.reg_number;
+        document.getElementById("email").textContent = student.email;
+        document.getElementById("phone").textContent = student.phone || "Not provided";
+        document.getElementById("course").textContent = student.course;
+        document.getElementById("year").textContent = student.year_of_study;
+    })
+    .catch(error => console.log(error));
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Results</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            color: #222;
+        }
+
+        header {
+            background: #142b52;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000012;
+            overflow-x: auto;
+        }
+
+        h2 { color: #142b52; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            min-width: 550px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #142b52;
+            color: white;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #142b52;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #message {
+            background: #f3f5f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>University Student Portal</h2>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>My Academic Results</h2>
+        <p>View your examination marks and grades.</p>
+
+        <div id="message">Loading your results...</div>
+
+        <table id="resultsTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Unit Code</th>
+                    <th>Unit Name</th>
+                    <th>Marks</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+
+            <tbody id="resultsBody"></tbody>
+        </table>
+
+        <a href="dashboard.html">← Back to Dashboard</a>
+    </div>
+</div>
+
+<script>
+fetch("/api/results")
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = "index.html";
+            throw new Error("Please log in.");
+        }
+
+        if (!response.ok) {
+            throw new Error("Could not load results.");
+        }
+
+        return response.json();
+    })
+    .then(results => {
+        const message = document.getElementById("message");
+        const table = document.getElementById("resultsTable");
+        const body = document.getElementById("resultsBody");
+
+        if (results.length === 0) {
+            message.textContent = "No examination results have been published yet.";
+            return;
+        }
+
+        results.forEach(result => {
+            const row = document.createElement("tr");
+
+            [
+                result.unit_code,
+                result.unit_name,
+                result.marks,
+                result.grade
+            ].forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            body.appendChild(row);
+        });
+
+        message.style.display = "none";
+        table.style.display = "table";
+    })
+    .catch(error => {
+        document.getElementById("message").textContent = error.message;
+    });
+</script>
+
+</body>
+</html>
