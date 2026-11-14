@@ -1,8 +1,11 @@
+const path = require("path");
 const express = require("express");
+const path = require("path");
 const { Pool } = require("pg");
 require("dotenv").config();
 
 const app = express();
+app.use(express.static(path.join(__dirname, "public")));
 
 const pool = new Pool(
   process.env.DATABASE_URL
@@ -34,7 +37,7 @@ app.use(session({
         maxAge: 1000 * 60 * 60
     }
 }));
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, "public")));
 // Student registration
 app.post("/register", async (req, res) => {
     const {
