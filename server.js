@@ -501,6 +501,27 @@ app.post("/api/mpesa/stkpush", async (req, res) => {
         });
     }
 
+    // CHECK MPESA CONFIGURATION
+    console.log("M-Pesa configuration check:", {
+        consumerKey: !!process.env.DARAJA_CONSUMER_KEY,
+        consumerSecret: !!process.env.DARAJA_CONSUMER_SECRET,
+        shortcode: !!process.env.DARAJA_SHORTCODE,
+        passkey: !!process.env.DARAJA_PASSKEY,
+        callbackUrl: !!process.env.DARAJA_CALLBACK_URL
+    });
+
+    if (
+        !process.env.DARAJA_CONSUMER_KEY ||
+        !process.env.DARAJA_CONSUMER_SECRET ||
+        !process.env.DARAJA_SHORTCODE ||
+        !process.env.DARAJA_PASSKEY ||
+        !process.env.DARAJA_CALLBACK_URL
+    ) {
+        return res.status(500).json({
+            message: "M-Pesa configuration is incomplete."
+        });
+    }
+
     const invoiceId = Number(req.body.invoice_id);
     const amount = Number(req.body.amount);
 
@@ -527,18 +548,6 @@ app.post("/api/mpesa/stkpush", async (req, res) => {
     if (!/^254[71]\d{8}$/.test(phone)) {
         return res.status(400).json({
             message: "Enter a valid Kenyan Safaricom phone number."
-        });
-    }
-
-    if (
-        !process.env.DARAJA_CONSUMER_KEY ||
-        !process.env.DARAJA_CONSUMER_SECRET ||
-        !process.env.DARAJA_SHORTCODE ||
-        !process.env.DARAJA_PASSKEY ||
-        !process.env.DARAJA_CALLBACK_URL
-    ) {
-        return res.status(500).json({
-            message: "M-Pesa configuration is incomplete."
         });
     }
 
