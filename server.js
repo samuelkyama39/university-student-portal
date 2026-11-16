@@ -67,7 +67,7 @@ async function getMpesaAccessToken() {
     return response.data.access_token;
 }
 
-// GENERATE KENYA TIME TIMESTAMP
+// GENERATE KENYA TIME TIMESTAMP: YYYYMMDDHHmmss
 function getMpesaTimestamp() {
     const parts = new Intl.DateTimeFormat("en-GB", {
         timeZone: "Africa/Nairobi",
@@ -501,27 +501,6 @@ app.post("/api/mpesa/stkpush", async (req, res) => {
         });
     }
 
-    // CHECK MPESA CONFIGURATION
-    console.log("M-Pesa configuration check:", {
-        consumerKey: !!process.env.DARAJA_CONSUMER_KEY,
-        consumerSecret: !!process.env.DARAJA_CONSUMER_SECRET,
-        shortcode: !!process.env.DARAJA_SHORTCODE,
-        passkey: !!process.env.DARAJA_PASSKEY,
-        callbackUrl: !!process.env.DARAJA_CALLBACK_URL
-    });
-
-    if (
-        !process.env.DARAJA_CONSUMER_KEY ||
-        !process.env.DARAJA_CONSUMER_SECRET ||
-        !process.env.DARAJA_SHORTCODE ||
-        !process.env.DARAJA_PASSKEY ||
-        !process.env.DARAJA_CALLBACK_URL
-    ) {
-        return res.status(500).json({
-            message: "M-Pesa configuration is incomplete."
-        });
-    }
-
     const invoiceId = Number(req.body.invoice_id);
     const amount = Number(req.body.amount);
 
@@ -548,6 +527,18 @@ app.post("/api/mpesa/stkpush", async (req, res) => {
     if (!/^254[71]\d{8}$/.test(phone)) {
         return res.status(400).json({
             message: "Enter a valid Kenyan Safaricom phone number."
+        });
+    }
+
+    if (
+        !process.env.DARAJA_CONSUMER_KEY ||
+        !process.env.DARAJA_CONSUMER_SECRET ||
+        !process.env.DARAJA_SHORTCODE ||
+        !process.env.DARAJA_PASSKEY ||
+        !process.env.DARAJA_CALLBACK_URL
+    ) {
+        return res.status(500).json({
+            message: "M-Pesa configuration is incomplete."
         });
     }
 
@@ -703,6 +694,8 @@ app.post("/api/mpesa/stkpush", async (req, res) => {
         );
 
         if (paymentId) {
+            // Keep the payment pending if Safaricom's response is uncertain.
+            // Do not mark it failed just because the connection timed out.
             if (error.response?.data) {
                 await pool.query(
                     `UPDATE fee_payments
@@ -725,9 +718,11 @@ app.post("/api/mpesa/stkpush", async (req, res) => {
 });
 
 // MPESA CALLBACK
+// Safaricom sends the final payment result to this route.
 app.post("/api/mpesa/callback", async (req, res) => {
     const callback = req.body?.Body?.stkCallback;
 
+    // Acknowledge the callback request.
     res.status(200).json({
         ResultCode: 0,
         ResultDesc: "Accepted"
@@ -767,6 +762,7 @@ app.post("/api/mpesa/callback", async (req, res) => {
 
         const payment = paymentResult.rows[0];
 
+        // Ignore duplicate callbacks.
         const currentPayment = await client.query(
             `SELECT payment_status
              FROM fee_payments
@@ -791,6 +787,7 @@ app.post("/api/mpesa/callback", async (req, res) => {
             const receiptNumber = getItem("MpesaReceiptNumber");
             const callbackAmount = Number(getItem("Amount"));
 
+            // Only complete the payment when the receipt and amount match.
             if (
                 !receiptNumber ||
                 callbackAmount !== Number(payment.amount_paid)
@@ -829,6 +826,7 @@ app.post("/api/mpesa/callback", async (req, res) => {
                 ]
             );
 
+            // Recalculate the invoice balance.
             const totals = await client.query(
                 `SELECT
                     fi.amount_due,
@@ -904,38 +902,18 @@ app.post("/api/mpesa/callback", async (req, res) => {
     }
 });
 
-// TEST DATABASE CONNECTION AND CHECK FEE TABLES
+// TEST DATABASE CONNECTION
 app.get("/test-db", async (req, res) => {
     try {
-        const connection = await pool.query("SELECT NOW()");
+        const result = await pool.query("SELECT NOW()");
 
-        const tables = await pool.query(`
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-            AND table_name IN ('fee_invoices', 'fee_payments')
-            ORDER BY table_name;
-        `);
-
-        const foundTables = tables.rows.map(row => row.table_name);
-
-        res.json({
-            message: "PostgreSQL connected successfully!",
-            connected_at: connection.rows[0].now,
-            fee_tables_found: foundTables,
-            fee_tables_missing: [
-                "fee_invoices",
-                "fee_payments"
-            ].filter(table => !foundTables.includes(table))
-        });
+        res.send(
+            "PostgreSQL connected successfully! " + result.rows[0].now
+        );
 
     } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-            message: "Database connection failed.",
-            error: error.message
-        });
+        res.status(500).send("Database connection failed.");
     }
 });
 
@@ -944,6 +922,24 @@ app.get("/logout", (req, res) => {
     req.session.destroy(() => {
         res.redirect("/index.html");
     });
+});
+// CHECK FEE DATABASE STRUCTURE
+app.get("/check-fee-structure", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT table_name, column_name, data_type
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name IN ('fee_invoices', 'fee_payments')
+            ORDER BY table_name, ordinal_position
+        `);
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
 });
 
 // START SERVER
