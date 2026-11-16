@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +6,9 @@
     <title>Student Fees</title>
 
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -23,7 +24,7 @@
         }
 
         .container {
-            max-width: 950px;
+            max-width: 1000px;
             margin: 30px auto;
             padding: 20px;
         }
@@ -36,11 +37,13 @@
             margin-bottom: 20px;
         }
 
-        h2 { color: #142b52; }
+        h2 {
+            color: #142b52;
+        }
 
         .summary {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
 
@@ -49,9 +52,17 @@
         }
 
         .amount {
-            font-size: 23px;
+            font-size: 24px;
             font-weight: bold;
             color: #142b52;
+        }
+
+        .green {
+            color: green;
+        }
+
+        .red {
+            color: #dc3545;
         }
 
         table {
@@ -71,22 +82,77 @@
             color: white;
         }
 
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        .message {
+            padding: 15px;
+            background: #f3f5f9;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .payment-option {
+            border: 1px solid #ddd;
+            padding: 18px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #142b52;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #24477c;
+        }
+
+        button:disabled {
+            background: #888;
+            cursor: not-allowed;
+        }
+
+        .mpesa-button {
+            background: #168a43;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .mpesa-button:hover {
+            background: #116b33;
+        }
+
         a {
             display: inline-block;
             margin-top: 20px;
             color: #142b52;
             text-decoration: none;
             font-weight: bold;
-        }
-
-        #message {
-            padding: 15px;
-            background: #f3f5f9;
-            border-radius: 8px;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
         }
     </style>
 </head>
@@ -101,12 +167,17 @@
 
     <div class="card">
         <h2>My Fees Statement</h2>
-        <p>View your fees information and payment history.</p>
+        <p>View your fees information and payment details.</p>
     </div>
 
-    <div id="message">Loading your fees information...</div>
+    <div id="message" class="message">
+        Loading your fees information...
+    </div>
+
+    <!-- FEE SUMMARY -->
 
     <div class="summary">
+
         <div class="card">
             <h3>Total Fees</h3>
             <div class="amount" id="totalFees">KSh 0.00</div>
@@ -114,93 +185,437 @@
 
         <div class="card">
             <h3>Amount Paid</h3>
-            <div class="amount" id="amountPaid">KSh 0.00</div>
+            <div class="amount green" id="amountPaid">KSh 0.00</div>
         </div>
 
         <div class="card">
-            <h3>Balance</h3>
-            <div class="amount" id="balance">KSh 0.00</div>
+            <h3>Outstanding Balance</h3>
+            <div class="amount red" id="balance">KSh 0.00</div>
         </div>
+
     </div>
 
+    <!-- INVOICE DETAILS -->
+
     <div class="card" style="margin-top:20px;">
-        <h2>Payment History</h2>
+
+        <h2>Fee Invoices</h2>
 
         <div class="table-wrap">
-            <table id="paymentTable" style="display:none;">
+
+            <table id="invoiceTable" style="display:none;">
+
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Reference</th>
+                        <th>Invoice Number</th>
+                        <th>Description</th>
                         <th>Amount</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
-                <tbody id="paymentBody"></tbody>
+
+                <tbody id="invoiceBody"></tbody>
+
             </table>
+
         </div>
 
-        <p id="noPayments">No payment records available.</p>
+        <p id="noInvoices" style="display:none;">
+            No fee invoices available.
+        </p>
+
+    </div>
+
+    <!-- PAYMENT OPTIONS -->
+
+    <div class="card">
+
+        <h2>Make a Payment</h2>
+
+        <p>Select an invoice and enter the amount you want to pay.</p>
+
+        <div class="payment-option">
+
+            <h3>M-Pesa</h3>
+
+            <p>Pay your university fees using M-Pesa STK Push.</p>
+
+            <form id="mpesaForm">
+
+                <label for="invoiceSelect">Select Invoice</label>
+
+                <select id="invoiceSelect" required>
+                    <option value="">Loading invoices...</option>
+                </select>
+
+                <label for="phoneNumber">M-Pesa Phone Number</label>
+
+                <input
+                    type="tel"
+                    id="phoneNumber"
+                    placeholder="07XXXXXXXX"
+                    required
+                >
+
+                <label for="paymentAmount">Amount to Pay (KSh)</label>
+
+                <input
+                    type="number"
+                    id="paymentAmount"
+                    min="1"
+                    step="1"
+                    placeholder="Enter amount"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="mpesa-button"
+                    id="payButton"
+                >
+                    Pay with M-Pesa
+                </button>
+
+            </form>
+
+            <div id="paymentMessage" class="message" style="display:none; margin-top:15px;"></div>
+
+            <button
+                type="button"
+                onclick="loadFees()"
+                style="margin-top:10px;"
+            >
+                Refresh Payment Status
+            </button>
+
+        </div>
+
+        <div class="payment-option">
+
+            <h3>Bank Payment</h3>
+
+            <p>
+                Bank payment details will be provided by the
+                university finance department.
+            </p>
+
+            <button disabled>
+                Bank Payment Coming Soon
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- PAYMENT HISTORY -->
+
+    <div class="card">
+
+        <h2>Payment History</h2>
+
+        <p id="noPayments">
+            Payment history will appear here after payments are confirmed.
+        </p>
 
         <a href="dashboard.html">← Back to Dashboard</a>
+
     </div>
 
 </div>
 
 <script>
-fetch("/api/fees")
-    .then(response => {
-        if (response.status === 401) {
-            window.location.href = "index.html";
-            throw new Error("Please log in.");
-        }
 
-        if (!response.ok) {
-            throw new Error("Could not load fees information.");
-        }
+    let currentInvoices = [];
 
-        return response.json();
-    })
-    .then(data => {
-        const money = value =>
-            "KSh " + Number(value).toLocaleString("en-KE", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+    // FORMAT CURRENCY
 
-        document.getElementById("totalFees").textContent = money(data.totalFees);
-        document.getElementById("amountPaid").textContent = money(data.amountPaid);
-        document.getElementById("balance").textContent = money(data.balance);
+    function money(value) {
+        return "KSh " + Number(value).toLocaleString("en-KE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
 
-        const body = document.getElementById("paymentBody");
+    // DISPLAY MESSAGE
 
-        if (data.payments.length > 0) {
-            data.payments.forEach(payment => {
-                const row = document.createElement("tr");
+    function showPaymentMessage(message, type) {
+        const box = document.getElementById("paymentMessage");
 
-                [
-                    new Date(payment.payment_date).toLocaleDateString(),
-                    payment.reference,
-                    money(payment.amount)
-                ].forEach(value => {
-                    const cell = document.createElement("td");
-                    cell.textContent = value;
-                    row.appendChild(cell);
+        box.textContent = message;
+        box.style.display = "block";
+        box.className = "message " + type;
+    }
+
+    // LOAD FEE INFORMATION
+
+    async function loadFees() {
+
+        const message = document.getElementById("message");
+
+        try {
+
+            const response = await fetch("/api/fees");
+
+            if (response.status === 401) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Could not load fee information.");
+            }
+
+            const invoices = await response.json();
+
+            if (!Array.isArray(invoices)) {
+                throw new Error("Unexpected fee information received.");
+            }
+
+            currentInvoices = invoices;
+
+            let totalFees = 0;
+            let amountPaid = 0;
+            let balance = 0;
+
+            const body = document.getElementById("invoiceBody");
+
+            body.innerHTML = "";
+
+            const invoiceSelect = document.getElementById("invoiceSelect");
+
+            invoiceSelect.innerHTML =
+                '<option value="">Select an invoice</option>';
+
+            if (invoices.length === 0) {
+
+                document.getElementById("noInvoices").style.display = "block";
+
+                document.getElementById("invoiceTable").style.display = "none";
+
+            } else {
+
+                document.getElementById("noInvoices").style.display = "none";
+
+                document.getElementById("invoiceTable").style.display = "table";
+
+                invoices.forEach(invoice => {
+
+                    const amount = Number(invoice.amount_due) || 0;
+                    const paid = Number(invoice.amount_paid) || 0;
+                    const remaining = Number(invoice.balance) || 0;
+
+                    totalFees += amount;
+                    amountPaid += paid;
+                    balance += remaining;
+
+                    const row = document.createElement("tr");
+
+                    const values = [
+                        invoice.invoice_number,
+                        invoice.description,
+                        money(amount),
+                        money(paid),
+                        money(remaining),
+                        invoice.status
+                    ];
+
+                    values.forEach(value => {
+
+                        const cell = document.createElement("td");
+
+                        cell.textContent = value;
+
+                        row.appendChild(cell);
+
+                    });
+
+                    body.appendChild(row);
+
+                    if (remaining > 0) {
+
+                        const option = document.createElement("option");
+
+                        option.value = invoice.invoice_id;
+
+                        option.textContent =
+                            invoice.invoice_number +
+                            " - Balance: " +
+                            money(remaining);
+
+                        invoiceSelect.appendChild(option);
+
+                    }
+
                 });
 
-                body.appendChild(row);
-            });
+            }
 
-            document.getElementById("paymentTable").style.display = "table";
-            document.getElementById("noPayments").style.display = "none";
+            document.getElementById("totalFees").textContent =
+                money(totalFees);
+
+            document.getElementById("amountPaid").textContent =
+                money(amountPaid);
+
+            document.getElementById("balance").textContent =
+                money(balance);
+
+            message.textContent = "Fee information loaded successfully.";
+
+            message.className = "message success";
+
+        } catch (error) {
+
+            message.textContent = error.message;
+
+            message.className = "message error";
+
         }
 
-        document.getElementById("message").style.display = "none";
-    })
-    .catch(error => {
-        document.getElementById("message").textContent = error.message;
-    });
+    }
+
+    // UPDATE PAYMENT AMOUNT WHEN INVOICE CHANGES
+
+    document.getElementById("invoiceSelect").addEventListener(
+        "change",
+        function () {
+
+            const invoice = currentInvoices.find(
+                item => String(item.invoice_id) === this.value
+            );
+
+            if (invoice) {
+
+                document.getElementById("paymentAmount").max =
+                    Number(invoice.balance);
+
+                document.getElementById("paymentAmount").value =
+                    Number(invoice.balance);
+
+            } else {
+
+                document.getElementById("paymentAmount").value = "";
+
+            }
+
+        }
+    );
+
+    // INITIATE MPESA PAYMENT
+
+    document.getElementById("mpesaForm").addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+            const invoiceId =
+                document.getElementById("invoiceSelect").value;
+
+            const phone =
+                document.getElementById("phoneNumber").value.trim();
+
+            const amount =
+                Number(document.getElementById("paymentAmount").value);
+
+            const payButton =
+                document.getElementById("payButton");
+
+            if (!invoiceId) {
+
+                showPaymentMessage(
+                    "Please select an invoice.",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (!phone) {
+
+                showPaymentMessage(
+                    "Please enter your M-Pesa phone number.",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (!Number.isInteger(amount) || amount <= 0) {
+
+                showPaymentMessage(
+                    "Enter a valid whole-number payment amount.",
+                    "error"
+                );
+
+                return;
+            }
+
+            payButton.disabled = true;
+
+            payButton.textContent = "Sending request...";
+
+            showPaymentMessage(
+                "Please wait while we contact Safaricom...",
+                ""
+            );
+
+            try {
+
+                const response = await fetch("/api/mpesa/stkpush", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        invoice_id: Number(invoiceId),
+                        phone: phone,
+                        amount: amount
+                    })
+
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Payment request failed."
+                    );
+                }
+
+                showPaymentMessage(
+                    data.message +
+                    " Check your phone and enter your M-Pesa PIN if prompted. Refresh your payment status after completing the transaction.",
+                    "success"
+                );
+
+            } catch (error) {
+
+                showPaymentMessage(
+                    error.message,
+                    "error"
+                );
+
+            } finally {
+
+                payButton.disabled = false;
+
+                payButton.textContent = "Pay with M-Pesa";
+
+            }
+
+        }
+    );
+
+    // LOAD PAGE
+
+    loadFees();
+
 </script>
 
 </body>
 </html>
-
